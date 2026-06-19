@@ -1,0 +1,27 @@
+version: "3.9"
+# Development override — hot reload, exposed ports, debug mode
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: builder    # use builder stage for dev tools
+    volumes:
+      - ./backend:/app   # live code mount for hot reload
+    environment:
+      - DEBUG=true
+      - APP_ENV=development
+      - LOG_LEVEL=DEBUG
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      - VITE_API_URL=http://localhost:8000

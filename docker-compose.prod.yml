@@ -1,0 +1,26 @@
+version: "3.9"
+
+# ── Production overrides ───────────────────────────────────────────────────────
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  backend:
+    environment:
+      - APP_ENV=production
+      - DEBUG=false
+      - LOG_LEVEL=WARNING
+    volumes:
+      # Don't mount source in production
+      - careergpt-data:/app/data
+    command: >
+      uvicorn main:app
+      --host 0.0.0.0
+      --port 8000
+      --workers 4
+      --access-log
+      --proxy-headers
+
+  frontend:
+    build:
+      args:
+        - VITE_API_URL=/api

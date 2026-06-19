@@ -1,0 +1,56 @@
+# Core Framework
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# LangChain & LangGraph
+langchain==0.2.5
+langchain-openai==0.1.8
+langchain-community==0.2.5
+langchain-chroma==0.1.1
+langgraph==0.1.5
+
+# Vector Database
+chromadb==0.5.3
+
+# PDF Processing
+pypdf==4.2.0
+pdfplumber==0.11.1
+
+# OpenAI
+openai==1.35.3
+
+# Database
+sqlalchemy==2.0.30
+alembic==1.13.1
+aiosqlite==0.20.0
+
+# Data Validation
+pydantic==2.7.4
+pydantic-settings==2.3.1
+
+# HTTP Client
+httpx==0.27.0
+aiofiles==23.2.1
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+slowapi==0.1.9
+
+# Utilities
+python-dotenv==1.0.1
+structlog==24.2.0
+tenacity==8.4.1
+tiktoken==0.7.0
+numpy==1.26.4
+
+# Testing
+pytest==8.2.2
+pytest-asyncio==0.23.7
+pytest-cov==5.0.0
+httpx==0.27.0
+
+# Dev Tools
+black==24.4.2
+isort==5.13.2

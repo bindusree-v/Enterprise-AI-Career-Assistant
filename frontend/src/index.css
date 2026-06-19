@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-gray-950 text-gray-100 font-sans antialiased;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-gray-900; }
+  ::-webkit-scrollbar-thumb { @apply bg-gray-700 rounded-full; }
+}
+
+/* ─── Custom utilities (Tailwind v4 syntax) ─────────────────────────────── */
+
+@utility card {
+  background-color: rgb(17 24 39);           /* bg-gray-900 */
+  border: 1px solid rgb(31 41 55);           /* border-gray-800 */
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+@utility btn-primary {
+  background-color: rgb(79 70 229);
+  color: #fff;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 150ms;
+  cursor: pointer;
+  display: inline-block;
+
+  &:hover { background-color: rgb(99 102 241); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+@utility btn-secondary {
+  background-color: rgb(31 41 55);
+  color: rgb(229 231 235);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 150ms;
+  cursor: pointer;
+
+  &:hover { background-color: rgb(55 65 81); }
+}
+
+@utility badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+@utility badge-green {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: rgb(20 83 45 / 0.5);
+  color: rgb(134 239 172);
+  border: 1px solid rgb(21 128 61);
+}
+
+@utility badge-yellow {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: rgb(113 63 18 / 0.5);
+  color: rgb(253 224 71);
+  border: 1px solid rgb(161 98 7);
+}
+
+@utility badge-red {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: rgb(127 29 29 / 0.5);
+  color: rgb(252 165 165);
+  border: 1px solid rgb(185 28 28);
+}
+
+@utility badge-blue {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: rgb(30 58 138 / 0.5);
+  color: rgb(147 197 253);
+  border: 1px solid rgb(29 78 216);
+}
+
+@utility badge-purple {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: rgb(88 28 135 / 0.5);
+  color: rgb(216 180 254);
+  border: 1px solid rgb(126 34 206);
+}
+
+@utility input {
+  width: 100%;
+  background-color: rgb(31 41 55);
+  border: 1px solid rgb(55 65 81);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: rgb(243 244 246);
+  font-size: 0.875rem;
+
+  &::placeholder { color: rgb(107 114 128); }
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(99 102 241);
+    border-color: transparent;
+  }
+}
+
+@utility section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(243 244 246);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes bounce-dots {
+  0%, 80%, 100% { transform: scale(0); }
+  40%           { transform: scale(1); }
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  background-color: rgb(129 140 248);
+  border-radius: 9999px;
+  display: inline-block;
+  animation: bounce-dots 1.4s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }

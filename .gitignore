@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Environment — NEVER commit
+.env
+backend/.env
+*.env
+
+# Data
+backend/data/
+data/
+
+# Docker
+.docker/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store

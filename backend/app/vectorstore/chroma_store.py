@@ -1,0 +1,140 @@
+"""
+ChromaDB vector store integration.
+
+Uses ChromaDB's built-in local embedding function (all-MiniLM-L6-v2)
+so NO OpenAI API call is needed for embeddings.
+OpenAI quota is preserved entirely for AI analysis (ATS, skill-gap, etc.)
+"""
+
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+import chromadb
+from chromadb.config import Settings as ChromaSettings
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+
+from app.config import get_settings
+from app.logging_config import get_logger
+
+logger = get_logger(__name__)
+
+COLLECTION_PREFIX = "resume_"
+
+
+class ChromaVectorStore:
+    """
+    Manages per-resume ChromaDB collections using local embeddings.
+    Zero OpenAI calls — fast and free.
+    """
+
+    def __init__(self):
+        self.settings = get_settings()
+        self._client: Optional[chromadb.ClientAPI] = None
+        # Built-in local embedding function (downloads ~90MB model once)
+        self._embed_fn = DefaultEmbeddingFunction()
+
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200,
+            length_function=len,
+            separators=["\n\n", "\n", ". ", " ", ""],
+        )
+
+    @property
+    def client(self) -> chromadb.ClientAPI:
+        if self._client is None:
+            persist_dir = Path(self.settings.chroma_persist_dir)
+            persist_dir.mkdir(parents=True, exist_ok=True)
+            self._client = chromadb.PersistentClient(
+                path=str(persist_dir),
+                settings=ChromaSettings(anonymized_telemetry=False),
+            )
+            logger.info("ChromaDB client initialized", path=str(persist_dir))
+        return self._client
+
+    def get_collection_name(self, resume_id: str) -> str:
+        safe_id = resume_id.replace("-", "_")
+        return f"{COLLECTION_PREFIX}{safe_id}"
+
+    async def embed_resume(
+        self, resume_id: str, text: str, metadata: Optional[dict] = None
+    ) -> Tuple[str, int]:
+        """Chunk text and store with local embeddings. No API calls."""
+        collection_name = self.get_collection_name(resume_id)
+        chunks = self.text_splitter.split_text(text)
+
+        logger.info("Embedding resume locally", resume_id=resume_id, chunks=len(chunks))
+
+        base_meta = metadata or {}
+        base_meta["resume_id"] = resume_id
+
+        # Delete existing collection if any
+        try:
+            self.client.delete_collection(collection_name)
+        except Exception:
+            pass
+
+        # Create collection with local embedding function
+        collection = self.client.create_collection(
+            name=collection_name,
+            embedding_function=self._embed_fn,
+            metadata={"hnsw:space": "cosine"},
+        )
+
+        # Add documents in batches
+        batch_size = 50
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i : i + batch_size]
+            ids = [f"{resume_id}_chunk_{i + j}" for j in range(len(batch))]
+            metadatas = [
+                {**base_meta, "chunk_index": i + j, "chunk_total": len(chunks)}
+                for j in range(len(batch))
+            ]
+            collection.add(documents=batch, metadatas=metadatas, ids=ids)
+
+        logger.info("Local embeddings stored", collection=collection_name, chunks=len(chunks))
+        return collection_name, len(chunks)
+
+    async def similarity_search(
+        self, resume_id: str, query: str, k: int = 5
+    ) -> List[Document]:
+        """Semantic search using local embeddings — no API call."""
+        collection_name = self.get_collection_name(resume_id)
+        try:
+            collection = self.client.get_collection(
+                name=collection_name,
+                embedding_function=self._embed_fn,
+            )
+            results = collection.query(query_texts=[query], n_results=min(k, collection.count()))
+            docs = []
+            for i, doc_text in enumerate(results["documents"][0]):
+                meta = results["metadatas"][0][i] if results["metadatas"] else {}
+                docs.append(Document(page_content=doc_text, metadata=meta))
+            return docs
+        except Exception as e:
+            logger.warning("Similarity search failed", error=str(e))
+            return []
+
+    def get_retriever(self, resume_id: str, k: int = 5):
+        """Simple wrapper that returns self for compatibility."""
+        return self  # agents call similarity_search directly
+
+    def collection_exists(self, resume_id: str) -> bool:
+        collection_name = self.get_collection_name(resume_id)
+        try:
+            collections = self.client.list_collections()
+            return any(c.name == collection_name for c in collections)
+        except Exception:
+            return False
+
+
+_chroma_store: Optional[ChromaVectorStore] = None
+
+
+def get_chroma_store() -> ChromaVectorStore:
+    global _chroma_store
+    if _chroma_store is None:
+        _chroma_store = ChromaVectorStore()
+    return _chroma_store
