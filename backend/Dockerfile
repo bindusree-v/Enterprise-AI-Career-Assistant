@@ -42,7 +42,8 @@ COPY --chown=appuser:appuser . .
 # Create data directories
 RUN mkdir -p data/uploads data/chroma && \
     chown -R appuser:appuser data/
-
+    
+ENV HOME=/app
 USER appuser
 
 # Expose port
