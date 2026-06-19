@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = Field(default=60)
 
     # CORS
-    cors_origins: str = Field(default="http://localhost:3000,http://localhost:5173")
+    cors_origins: str = Field(default="http://localhost:3000,http://localhost:5173,https://enterprise-ai-career-assistant.vercel.app")
 
     @field_validator("app_env")
     @classmethod
