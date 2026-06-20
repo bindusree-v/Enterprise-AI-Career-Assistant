@@ -20,7 +20,7 @@ from app.models.database import Analysis, Resume
 from app.models.schemas import AnalyzeResumeResponse, StructuredProfile
 from app.services.pdf_service import PDFService
 from app.vectorstore.chroma_store import ChromaVectorStore
-from app.routers import resume
+# from app.routers import resume
 # from backend.app.routers import resume
 
 logger = get_logger(__name__)
