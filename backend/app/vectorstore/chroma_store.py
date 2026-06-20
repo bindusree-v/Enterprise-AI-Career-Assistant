@@ -33,7 +33,7 @@ Path("/tmp/chroma_cache").mkdir(parents=True, exist_ok=True)
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
-from langchain_community.embeddings import HuggingFaceEmbeddings
+# from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
@@ -54,12 +54,13 @@ class ChromaVectorStore:
     def __init__(self):
         self.settings = get_settings()
         self._client: Optional[chromadb.ClientAPI] = None
+        self._embed_fn = DefaultEmbeddingFunction()
         # Built-in local embedding function (downloads ~90MB model once)
-        from langchain_community.embeddings import HuggingFaceEmbeddings
+        # from langchain_community.embeddings import HuggingFaceEmbeddings
 
-        self._embed_fn = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        # self._embed_fn = HuggingFaceEmbeddings(
+        #     model_name="sentence-transformers/all-MiniLM-L6-v2"
+        # )
 
         # try:
         #     from langchain_huggingface import HuggingFaceEmbeddings
@@ -126,8 +127,8 @@ class ChromaVectorStore:
         self, resume_id: str, text: str, metadata: Optional[dict] = None
     ) -> Tuple[str, int]:
         """Chunk text and store with local embeddings. No API calls."""
-        if self._embed_fn is None:
-            raise RuntimeError("Embedding model not initialized")
+        # if self._embed_fn is None:
+        #     raise RuntimeError("Embedding model not initialized")
         # if self._embed_fn is None:
         #     logger.error("Embedding service unavailable")
         #     self._embed_fn = DefaultEmbeddingFunction()
@@ -151,12 +152,17 @@ class ChromaVectorStore:
         #     name=collection_name,
         #     metadata={"hnsw:space": "cosine"}
         # )
+        # collection = self.client.get_or_create_collection(
+        #     name=collection_name,
+        #     embedding_function=DefaultEmbeddingFunction()
+        # )
+
         collection = self.client.get_or_create_collection(
             name=collection_name,
-            embedding_function=DefaultEmbeddingFunction()
+            embedding_function=self._embed_fn
         )
-
-        collection = self.client.get_collection(name=collection_name)
+        
+        # collection = self.client.get_collection(name=collection_name)
 
         # collection = self.client.get_collection(name=collection_name)
 
@@ -174,19 +180,33 @@ class ChromaVectorStore:
                 {**base_meta, "chunk_index": i + j, "chunk_total": len(chunks)}
                 for j in range(len(batch))
             ]
+            metadatas = [
+                {
+                    **base_meta,
+                    "chunk_index": i + j,
+                    "chunk_total": len(chunks)
+                }
+                for j in range(len(batch))
+            ]
 
-            embeddings = self._embed_fn.embed_documents(batch)
+            collection.add(
+                documents=batch,
+                metadatas=metadatas,
+                ids=ids
+            )
+
+            # embeddings = self._embed_fn.embed_documents(batch)
 
             # embeddings = self._embed_fn(batch).tolist()
             # embeddings = self._embed_fn(batch)
             # embeddings = self._embed_fn.embed_documents(batch)
 
-            collection.add(
-                documents=batch,
-                # embeddings=embeddings,
-                metadatas=metadatas,
-                ids=ids
-            )
+            # collection.add(
+            #     documents=batch,
+            #     # embeddings=embeddings,
+            #     metadatas=metadatas,
+            #     ids=ids
+            # )
             # collection.add(documents=batch, metadatas=metadatas, ids=ids)
 
         logger.info("Local embeddings stored", collection=collection_name, chunks=len(chunks))
