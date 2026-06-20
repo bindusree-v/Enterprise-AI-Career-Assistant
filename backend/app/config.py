@@ -2,7 +2,7 @@
 Application configuration — supports all 6 LLM providers:
   groq | gemini | mistral | cohere | anthropic | openai
 """
-
+import os
 from functools import lru_cache
 from typing import List
 
@@ -27,7 +27,6 @@ class Settings(BaseSettings):
 
     # Server
     host: str = Field(default="0.0.0.0")
-    import os
 
     port: int = Field(
         default_factory=lambda: int(os.getenv("PORT", "10000"))
