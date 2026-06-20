@@ -31,7 +31,7 @@ Path("/tmp/chroma_cache").mkdir(parents=True, exist_ok=True)
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
-# from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
@@ -54,6 +54,17 @@ class ChromaVectorStore:
         self.settings = get_settings()
         self._client: Optional[chromadb.ClientAPI] = None
         # Built-in local embedding function (downloads ~90MB model once)
+        try:
+            from langchain_huggingface import HuggingFaceEmbeddings
+
+            self._embed_fn = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2"
+            )
+
+        except Exception as e:
+            logger.error(f"Embedding load failed: {e}")
+            self._embed_fn = None
+
         # self._embed_fn = DefaultEmbeddingFunction()
         # from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
@@ -64,22 +75,22 @@ class ChromaVectorStore:
         # self._embed_fn = HuggingFaceEmbeddings(
         #     model_name="sentence-transformers/all-MiniLM-L6-v2"
         # )
-        try:
-            from langchain_community.embeddings import HuggingFaceEmbeddings
+        # try:
+        #     from langchain_community.embeddings import HuggingFaceEmbeddings
 
-            self._embed_fn = HuggingFaceEmbeddings(
-                model_name="all-MiniLM-L6-v2"
-            )
+        #     self._embed_fn = HuggingFaceEmbeddings(
+        #         model_name="all-MiniLM-L6-v2"
+        #     )
 
-        except Exception as e:
-            logger.warning(f"HuggingFaceEmbeddings failed: {e}")
+        # except Exception as e:
+        #     logger.warning(f"HuggingFaceEmbeddings failed: {e}")
 
-            from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+        #     from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-            self._embed_fn = SentenceTransformerEmbeddingFunction(
-                model_name="all-MiniLM-L6-v2",
-                device="cpu"
-            )
+        #     self._embed_fn = SentenceTransformerEmbeddingFunction(
+        #         model_name="all-MiniLM-L6-v2",
+        #         device="cpu"
+        #     )
 
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
@@ -108,6 +119,9 @@ class ChromaVectorStore:
         self, resume_id: str, text: str, metadata: Optional[dict] = None
     ) -> Tuple[str, int]:
         """Chunk text and store with local embeddings. No API calls."""
+        if self._embed_fn is None:
+            raise RuntimeError("Embedding model not initialized")
+    
         collection_name = self.get_collection_name(resume_id)
         chunks = self.text_splitter.split_text(text)
 
