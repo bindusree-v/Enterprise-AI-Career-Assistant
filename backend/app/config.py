@@ -27,7 +27,11 @@ class Settings(BaseSettings):
 
     # Server
     host: str = Field(default="0.0.0.0")
-    port: int = Field(default=8000)
+    import os
+
+    port: int = Field(
+        default_factory=lambda: int(os.getenv("PORT", "10000"))
+    )
 
     # LLM Provider
     llm_provider: str = Field(default="groq")
