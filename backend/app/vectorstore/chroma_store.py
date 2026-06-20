@@ -7,7 +7,7 @@ OpenAI quota is preserved entirely for AI analysis (ATS, skill-gap, etc.)
 """
 import os
 from pathlib import Path
-# from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 # # Force HuggingFace cache into writable folder
 # os.environ["HF_HOME"] = "data/hf_cache"
@@ -18,10 +18,10 @@ from pathlib import Path
 # FORCE ALL ML + CHROMA CACHE TO WRITABLE DIR
 os.environ["HOME"] = "/tmp"
 os.environ["XDG_CACHE_HOME"] = "/tmp/.cache"
-os.environ["HF_HOME"] = "/tmp/hf_cache"
-os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
-os.environ["SENTENCE_TRANSFORMERS_HOME"] = "/tmp/st_models"
-os.environ["CHROMA_CACHE"] = "/tmp/chroma_cache"
+# os.environ["HF_HOME"] = "/tmp/hf_cache"
+# os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
+# os.environ["SENTENCE_TRANSFORMERS_HOME"] = "/tmp/st_models"
+# os.environ["CHROMA_CACHE"] = "/tmp/chroma_cache"
 
 # Create directories
 Path("/tmp/hf_cache").mkdir(parents=True, exist_ok=True)
@@ -55,7 +55,7 @@ class ChromaVectorStore:
         self._client: Optional[chromadb.ClientAPI] = None
         # Built-in local embedding function (downloads ~90MB model once)
         # self._embed_fn = DefaultEmbeddingFunction()
-        from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+        # from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
         # self._embed_fn = SentenceTransformerEmbeddingFunction(
         #     model_name="all-MiniLM-L6-v2",
@@ -110,7 +110,7 @@ class ChromaVectorStore:
         collection = self.client.create_collection(
             name=collection_name,
             # embedding_function=self._embed_fn,
-            metadata={"hnsw:space": "cosine"},
+            metadata={"hnsw:space": "cosine"}
         )
 
         # Add documents in batches
