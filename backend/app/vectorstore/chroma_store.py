@@ -5,9 +5,29 @@ Uses ChromaDB's built-in local embedding function (all-MiniLM-L6-v2)
 so NO OpenAI API call is needed for embeddings.
 OpenAI quota is preserved entirely for AI analysis (ATS, skill-gap, etc.)
 """
-
+import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+# from typing import List, Optional, Tuple
+
+# # Force HuggingFace cache into writable folder
+# os.environ["HF_HOME"] = "data/hf_cache"
+# os.environ["TRANSFORMERS_CACHE"] = "data/hf_cache"
+
+# Path("data/hf_cache").mkdir(parents=True, exist_ok=True)
+
+# FORCE ALL ML + CHROMA CACHE TO WRITABLE DIR
+os.environ["HOME"] = "/tmp"
+os.environ["XDG_CACHE_HOME"] = "/tmp/.cache"
+os.environ["HF_HOME"] = "/tmp/hf_cache"
+os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf_cache"
+os.environ["SENTENCE_TRANSFORMERS_HOME"] = "/tmp/st_models"
+os.environ["CHROMA_CACHE"] = "/tmp/chroma_cache"
+
+# Create directories
+Path("/tmp/hf_cache").mkdir(parents=True, exist_ok=True)
+Path("/tmp/st_models").mkdir(parents=True, exist_ok=True)
+Path("/tmp/.cache").mkdir(parents=True, exist_ok=True)
+Path("/tmp/chroma_cache").mkdir(parents=True, exist_ok=True)
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
@@ -33,7 +53,13 @@ class ChromaVectorStore:
         self.settings = get_settings()
         self._client: Optional[chromadb.ClientAPI] = None
         # Built-in local embedding function (downloads ~90MB model once)
-        self._embed_fn = DefaultEmbeddingFunction()
+        # self._embed_fn = DefaultEmbeddingFunction()
+        from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+
+        self._embed_fn = SentenceTransformerEmbeddingFunction(
+            model_name="all-MiniLM-L6-v2",
+            device="cpu"
+        )
 
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
