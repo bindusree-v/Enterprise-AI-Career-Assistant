@@ -141,15 +141,23 @@ AI-powered career assistant platform featuring:
 
 app = create_app()
 
+import os
+import uvicorn
 
 if __name__ == "__main__":
     import uvicorn
 
     settings = get_settings()
+
+    port = int(os.environ.get("PORT", 10000))
+    
     uvicorn.run(
         "main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.debug,
+        host="0.0.0.0",
+        port=port,
+        reload=False, 
+        # host=settings.host,
+        # port=settings.port,
+        # reload=settings.debug,
         log_level=settings.log_level.lower(),
     )
