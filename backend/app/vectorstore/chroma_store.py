@@ -54,27 +54,27 @@ class ChromaVectorStore:
         self.settings = get_settings()
         self._client: Optional[chromadb.ClientAPI] = None
         # Built-in local embedding function (downloads ~90MB model once)
-        try:
-            from langchain_huggingface import HuggingFaceEmbeddings
+        # try:
+        #     from langchain_huggingface import HuggingFaceEmbeddings
 
-            self._embed_fn = HuggingFaceEmbeddings(
-                model_name="sentence-transformers/all-MiniLM-L6-v2"
-            )
+        #     self._embed_fn = HuggingFaceEmbeddings(
+        #         model_name="sentence-transformers/all-MiniLM-L6-v2"
+        #     )
 
-        except Exception as e:
-            logger.error(f"Embedding load failed: {e}")
-            self._embed_fn = None
+        # except Exception as e:
+        #     logger.error(f"Embedding load failed: {e}")
+        #     self._embed_fn = None
 
         # self._embed_fn = DefaultEmbeddingFunction()
-        # from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+        from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
         # self._embed_fn = SentenceTransformerEmbeddingFunction(
         #     model_name="all-MiniLM-L6-v2",
         #     device="cpu"
         # )
-        # self._embed_fn = HuggingFaceEmbeddings(
-        #     model_name="sentence-transformers/all-MiniLM-L6-v2"
-        # )
+        self._embed_fn = SentenceTransformerEmbeddingFunction(
+            model_name="all-MiniLM-L6-v2"
+        )
         # try:
         #     from langchain_community.embeddings import HuggingFaceEmbeddings
 
@@ -121,6 +121,9 @@ class ChromaVectorStore:
         """Chunk text and store with local embeddings. No API calls."""
         if self._embed_fn is None:
             raise RuntimeError("Embedding model not initialized")
+        # if self._embed_fn is None:
+        #     logger.error("Embedding service unavailable")
+        #     self._embed_fn = DefaultEmbeddingFunction()
     
         collection_name = self.get_collection_name(resume_id)
         chunks = self.text_splitter.split_text(text)
@@ -142,6 +145,15 @@ class ChromaVectorStore:
             # embedding_function=self._embed_fn,
             metadata={"hnsw:space": "cosine"}
         )
+
+        collection = self.client.get_collection(name=collection_name)
+        
+        # collection = self.client.get_collection(name=collection_name)
+
+        # results = collection.query(
+        #     query_texts=[query],
+        #     n_results=k
+        # )
 
         # Add documents in batches
         batch_size = 50
