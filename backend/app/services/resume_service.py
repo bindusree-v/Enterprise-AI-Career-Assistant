@@ -20,7 +20,8 @@ from app.models.database import Analysis, Resume
 from app.models.schemas import AnalyzeResumeResponse, StructuredProfile
 from app.services.pdf_service import PDFService
 from app.vectorstore.chroma_store import ChromaVectorStore
-from backend.app.routers import resume
+from app.routers import resume
+# from backend.app.routers import resume
 
 logger = get_logger(__name__)
 
@@ -75,7 +76,7 @@ class ResumeService:
     # ✅ SAVE PROFILE
         resume.structured_profile = (
             profile.dict() if hasattr(profile, "dict") else profile
-        )
+    )
 
     # ✅ COMMIT
         await self.db.commit()
