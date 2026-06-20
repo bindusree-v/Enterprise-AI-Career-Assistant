@@ -13,6 +13,7 @@ build/
 .venv/
 venv/
 env/
+.venv_local/
 
 # Environment files (NEVER commit secrets)
 .env
