@@ -31,7 +31,8 @@ Path("/tmp/chroma_cache").mkdir(parents=True, exist_ok=True)
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
-from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+# from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
@@ -56,9 +57,12 @@ class ChromaVectorStore:
         # self._embed_fn = DefaultEmbeddingFunction()
         from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-        self._embed_fn = SentenceTransformerEmbeddingFunction(
-            model_name="all-MiniLM-L6-v2",
-            device="cpu"
+        # self._embed_fn = SentenceTransformerEmbeddingFunction(
+        #     model_name="all-MiniLM-L6-v2",
+        #     device="cpu"
+        # )
+        self._embed_fn = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
 
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -105,7 +109,7 @@ class ChromaVectorStore:
         # Create collection with local embedding function
         collection = self.client.create_collection(
             name=collection_name,
-            embedding_function=self._embed_fn,
+            # embedding_function=self._embed_fn,
             metadata={"hnsw:space": "cosine"},
         )
 
@@ -118,7 +122,15 @@ class ChromaVectorStore:
                 {**base_meta, "chunk_index": i + j, "chunk_total": len(chunks)}
                 for j in range(len(batch))
             ]
-            collection.add(documents=batch, metadatas=metadatas, ids=ids)
+            embeddings = self._embed_fn.embed_documents(batch)
+
+            collection.add(
+                documents=batch,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                ids=ids
+            )
+            # collection.add(documents=batch, metadatas=metadatas, ids=ids)
 
         logger.info("Local embeddings stored", collection=collection_name, chunks=len(chunks))
         return collection_name, len(chunks)
