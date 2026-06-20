@@ -142,12 +142,11 @@ class ChromaVectorStore:
         # Create collection with local embedding function
         collection = self.client.create_collection(
             name=collection_name,
-            # embedding_function=self._embed_fn,
             metadata={"hnsw:space": "cosine"}
         )
 
         collection = self.client.get_collection(name=collection_name)
-        
+
         # collection = self.client.get_collection(name=collection_name)
 
         # results = collection.query(
@@ -164,7 +163,9 @@ class ChromaVectorStore:
                 {**base_meta, "chunk_index": i + j, "chunk_total": len(chunks)}
                 for j in range(len(batch))
             ]
-            embeddings = self._embed_fn.embed_documents(batch)
+            embeddings = self._embed_fn(batch).tolist()
+            # embeddings = self._embed_fn(batch)
+            # embeddings = self._embed_fn.embed_documents(batch)
 
             collection.add(
                 documents=batch,
@@ -184,8 +185,7 @@ class ChromaVectorStore:
         collection_name = self.get_collection_name(resume_id)
         try:
             collection = self.client.get_collection(
-                name=collection_name,
-                embedding_function=self._embed_fn,
+                name=collection_name
             )
             results = collection.query(query_texts=[query], n_results=min(k, collection.count()))
             docs = []
