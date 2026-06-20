@@ -4,6 +4,8 @@ Uses get_llm() for provider-agnostic AI calls.
 """
 
 import json
+import profile
+import profile
 import uuid
 from typing import Optional
 
@@ -18,6 +20,7 @@ from app.models.database import Analysis, Resume
 from app.models.schemas import AnalyzeResumeResponse, StructuredProfile
 from app.services.pdf_service import PDFService
 from app.vectorstore.chroma_store import ChromaVectorStore
+from backend.app.routers import resume
 
 logger = get_logger(__name__)
 
@@ -55,12 +58,31 @@ class ResumeService:
             raise ValueError(f"Resume {resume_id} not found")
         return resume
 
-    async def save_extracted_text(self, resume_id: str, text: str, profile: StructuredProfile) -> Resume:
+    # async def save_extracted_text(self, resume_id: str, text: str, profile: StructuredProfile) -> Resume:
+    #     resume = await self.get_resume_or_404(resume_id)
+    #     resume.extracted_text = text
+    #     resume.structured_profile = profile.model_dump()
+    #     await self.db.commit()
+    #     await self.db.refresh(resume)
+    #     return resume
+
+    async def save_extracted_text(self, resume_id: str, raw_text: str, profile):
         resume = await self.get_resume_or_404(resume_id)
-        resume.extracted_text = text
-        resume.structured_profile = profile.model_dump()
+
+    # ✅ SAVE RAW TEXT
+        resume.extracted_text = raw_text
+
+    # ✅ SAVE PROFILE
+        resume.structured_profile = (
+            profile.dict() if hasattr(profile, "dict") else profile
+        )
+
+    # ✅ COMMIT
         await self.db.commit()
+
+    # ✅ REFRESH
         await self.db.refresh(resume)
+
         return resume
 
     async def save_embeddings_info(self, resume_id: str, collection_name: str) -> Resume:

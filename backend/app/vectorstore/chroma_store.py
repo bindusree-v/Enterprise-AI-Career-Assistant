@@ -6,6 +6,7 @@ so NO OpenAI API call is needed for embeddings.
 OpenAI quota is preserved entirely for AI analysis (ATS, skill-gap, etc.)
 """
 import os
+os.environ["SENTENCE_TRANSFORMERS_HOME"] = "/tmp/st_models"
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -54,6 +55,12 @@ class ChromaVectorStore:
         self.settings = get_settings()
         self._client: Optional[chromadb.ClientAPI] = None
         # Built-in local embedding function (downloads ~90MB model once)
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+
+        self._embed_fn = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+
         # try:
         #     from langchain_huggingface import HuggingFaceEmbeddings
 
@@ -66,15 +73,15 @@ class ChromaVectorStore:
         #     self._embed_fn = None
 
         # self._embed_fn = DefaultEmbeddingFunction()
-        from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+        # from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
         # self._embed_fn = SentenceTransformerEmbeddingFunction(
         #     model_name="all-MiniLM-L6-v2",
         #     device="cpu"
         # )
-        self._embed_fn = SentenceTransformerEmbeddingFunction(
-            model_name="all-MiniLM-L6-v2"
-        )
+        # self._embed_fn = SentenceTransformerEmbeddingFunction(
+        #     model_name="all-MiniLM-L6-v2"
+        # )
         # try:
         #     from langchain_community.embeddings import HuggingFaceEmbeddings
 
@@ -140,9 +147,13 @@ class ChromaVectorStore:
             pass
 
         # Create collection with local embedding function
-        collection = self.client.create_collection(
+        # collection = self.client.create_collection(
+        #     name=collection_name,
+        #     metadata={"hnsw:space": "cosine"}
+        # )
+        collection = self.client.get_or_create_collection(
             name=collection_name,
-            metadata={"hnsw:space": "cosine"}
+            embedding_function=DefaultEmbeddingFunction()
         )
 
         collection = self.client.get_collection(name=collection_name)
@@ -163,13 +174,16 @@ class ChromaVectorStore:
                 {**base_meta, "chunk_index": i + j, "chunk_total": len(chunks)}
                 for j in range(len(batch))
             ]
-            embeddings = self._embed_fn(batch).tolist()
+
+            embeddings = self._embed_fn.embed_documents(batch)
+
+            # embeddings = self._embed_fn(batch).tolist()
             # embeddings = self._embed_fn(batch)
             # embeddings = self._embed_fn.embed_documents(batch)
 
             collection.add(
                 documents=batch,
-                embeddings=embeddings,
+                # embeddings=embeddings,
                 metadatas=metadatas,
                 ids=ids
             )
