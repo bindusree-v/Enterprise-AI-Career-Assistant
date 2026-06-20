@@ -61,9 +61,25 @@ class ChromaVectorStore:
         #     model_name="all-MiniLM-L6-v2",
         #     device="cpu"
         # )
-        self._embed_fn = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        # self._embed_fn = HuggingFaceEmbeddings(
+        #     model_name="sentence-transformers/all-MiniLM-L6-v2"
+        # )
+        try:
+            from langchain_community.embeddings import HuggingFaceEmbeddings
+
+            self._embed_fn = HuggingFaceEmbeddings(
+                model_name="all-MiniLM-L6-v2"
+            )
+
+        except Exception as e:
+            logger.warning(f"HuggingFaceEmbeddings failed: {e}")
+
+            from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+
+            self._embed_fn = SentenceTransformerEmbeddingFunction(
+                model_name="all-MiniLM-L6-v2",
+                device="cpu"
+            )
 
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
