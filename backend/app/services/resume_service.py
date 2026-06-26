@@ -75,8 +75,13 @@ class ResumeService:
 
     # ✅ SAVE PROFILE
         resume.structured_profile = (
-            profile.dict() if hasattr(profile, "dict") else profile
-    )
+            profile.model_dump()
+            if hasattr(profile, "model_dump")
+            else profile
+        )
+    #     resume.structured_profile = (
+    #         profile.dict() if hasattr(profile, "dict") else profile
+    # )
 
     # ✅ COMMIT
         await self.db.commit()
@@ -132,7 +137,12 @@ class ResumeService:
             if content.startswith("json"):
                 content = content[4:]
 
-        data = json.loads(content.strip())
+        # data = json.loads(content.strip())
+        try:
+            data = json.loads(content.strip())
+        except json.JSONDecodeError:
+            logger.error(f"Invalid JSON from LLM: {content}")
+            raise ValueError("LLM returned invalid JSON.")
 
         result = AnalyzeResumeResponse(
             resume_id=resume_id,

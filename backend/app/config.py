@@ -34,6 +34,7 @@ class Settings(BaseSettings):
 
     # LLM Provider
     llm_provider: str = Field(default="groq")
+    groq_api_key: str = Field(default="")
 
     # 1. Groq (FREE) — https://console.groq.com
     groq_api_key: str = Field(default="")
